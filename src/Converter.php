@@ -116,6 +116,7 @@ class Converter implements ConverterInterface
             $parameters->getInputFilter() ? sprintf('--infilter=%s', $parameters->getInputFilter()) : null,
             '--convert-to "' . $parameters->getOutputFormat() . $outputFilters . '"',
             '"' . $inputFile . '"',
+            '--outdir "' . $this->tempDir . '"',
         ]);
         $command = $this->binaryPath . ' ' . implode(' ', array_filter($options));
 
@@ -136,6 +137,17 @@ class Converter implements ConverterInterface
                 $self->logger->info($buffer);
             }
         });
+
+        //для портативной версии в Windows ждем немного еще
+        if ($this->timeout) {
+            for ($i = 0; $i < $this->timeout; $i++) {
+                if (file_exists($inputFile . '.' . $parameters->getOutputFormat())) {
+                    break;
+                }
+                sleep(1);
+            }
+        }
+
 
         $result = $this->createOutput($inputFile . '.' . $parameters->getOutputFormat(), $parameters->getOutputFile());
         $this->deleteInput($parameters, $inputFile);
